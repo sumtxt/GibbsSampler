@@ -1,0 +1,221 @@
+\documentclass[11pt,a4paper]{article}
+
+\input{_header.tex}
+
+% History:
+% - first version March 19, 2014
+
+\begin{document}
+
+\textbf{Finite Mixture of Linear Regression Models}\footnote{Notes by Moritz Marbach. Comments welcome.} \\
+
+We observe a variable $y_i$, where $i = 1,...,N$ and a vector of covariates, $\mathbf{x}_i$. Let there be also a vector of unknown coefficients $\boldsymbol{\beta}_k$, where $k=1,...,K$, that we like to estimate jointly with some variance $\sigma^2_k$. If $K=1$, this model is an ordinary linear regression model. If $K > 1$, then there are $K$ discrete groups of observations which differ in their parameters. The tricky part is that the allocations in these groups is unknown and has to be estimated from the data. The canonical treatment of this Finite Mixture of Linear Regression Model\footnote{Other common names: switching regression models in economics, latent class regression models in marketing and mixture-of-expert models in machine-learning literature and as mixed models in biology \citet[p. 246]{FruehwirthSchnatter.2006}} appears e.g. in \citet{FruehwirthSchnatter.2006}.
+
+The model can be written as: 
+
+\begin{equation*}
+\begin{split}
+y_i &= \mathbf{x}_i \bm{\beta}_{k[S_i]} + e_{ik[S_i]} \\
+e_{ik} &\sim \mathrm{N}(0,\sigma^2_{k[S_i]}). 
+\end{split}
+\end{equation*}
+
+I am borrowing the Gelman-Hill notation \citep{Gelman.Hill.2006} and let an indicator $S_i$ select the corresponding indices $k$ depending on the  $i^{th}$ observation.
+
+We can write the joined density of the $(y_i,S_i)$ conditional on the parameters and the data, is as follows: 
+
+\begin{equation*}
+\begin{split}
+p(y_i, S_i | \mathbf{x}_i, \bm{\beta}_1,..., \bm{\beta}_K, \sigma^2_1,...,\sigma^2_K ). 
+\end{split}
+\end{equation*}
+
+We marginalize over $S_i$ to arrive at: 
+
+\begin{equation*}
+\begin{split}
+\sum_{k=1}^K p(y_i | \mathbf{x}_i, \bm{\beta}_k, \sigma^2_k) p(S_i=k | \mathbf{x}_i, \bm{\beta}_k, \sigma^2_k). 
+\end{split}
+\end{equation*}
+
+Assuming independence of $S_i$ from the data $(\mathbf{x}_i)$ and the parameters $\bm{\beta}_k, \sigma^2_k$ 
+
+\begin{equation*}
+\begin{split}
+\sum_{k=1}^K p(y_i | \mathbf{x}_i, \bm{\beta}_k, \sigma^2_k) p(S_i=k). 
+\end{split}
+\end{equation*}
+
+
+Assuming independence across observations and defining $\eta_k=p(S_i=k)$ the likelihood function of this model is as follow: 
+
+\begin{equation*}
+\mathcal{L} = \prod^{N}_{i=1} \bigg ( \sum_{k=1}^{K} \mathrm{\Phi} ( y_{i} | \mathbf{x}_i\boldsymbol{\beta}_k, \sigma^2_k ) \eta_k \bigg ), 
+\end{equation*}
+
+where $\eta_k$ are usually called the 'weights' of the mixture distribution. The larger $\eta_k$ is the higher the weight, the higher the contribution of the component's density to the likelihood. 
+
+The prior densities are commonly chosen to be: 
+
+
+\begin{equation*}
+\begin{split}
+\boldsymbol{\beta}_k &\sim \mathrm{\mathbf{N}}(\textbf{b}_0, \textbf{B}_0) \\
+\sigma^2_k &\sim \mathrm{invGamma}(e_0/2, f_0/2) \\
+\bm{\eta} &\sim \mathrm{\mathbf{Dirichlet}}(n_0, ..., n_0)
+\end{split}
+\end{equation*}
+
+Finite mixture of multivariate mixtures of normals are (generic) identifiable \citep[21 and references therein]{FruehwirthSchnatter.2006}. However, identifiability does not follow directly for mixtures of regression models. For  Finite mixture of linear regression models are identified if there are at least $K(B-1)+1$ distinct rows in the design matrix (where $B$ is the number of covariates that vary across $K$ components) \citep[246]{FruehwirthSchnatter.2006}. 
+
+
+A Gibbs Sampler can be found for example in \citep[p. 75, 253]{FruehwirthSchnatter.2006}, which I adapted in notation. 
+
+\begin{center} \shadowbox{ \begin{minipage}{12cm}
+At each iteration $m$ do:  \\
+1. Draw $\mathbf{\eta}$: 
+
+\begin{equation*}
+\begin{split}
+\bm{\eta}^{(m)} &\sim \mathrm{\mathbf{Dirichlet}}(n_1,..., n_k ,...,n_K) \\
+n_k &= \sum_{i=1}^{N} I(S^{(m-1)}_i = k) + n_0, 
+\end{split}
+\end{equation*}
+
+where $I(.)$ is an indicator function taking the value 1 if the condition inside it holds, and zero otherwise. 
+
+2. For each $k=1,...,K$ draw $\mathbf{\beta_k}$: 
+
+\begin{equation*}
+\begin{split}
+\boldsymbol{\beta}^{(m)}_k &\sim \mathrm{\mathbf{N}}(\textbf{b}_{1k}, \textbf{B}_{1k}) \\
+\textbf{b}_{1k} &= \textbf{B}_{1k} \bigg ( ( 1/\sigma^{2(m-1)}_{k} ) \textbf{X}^{'(m-1)}_k\textbf{y}^{(m-1)}_k + \textbf{B}_0^{-1} \textbf{b}_0  \bigg ) \\
+\textbf{B}_{1k} &= \bigg ( ( 1/\sigma^{2(m-1)}_k ) \textbf{X}^{'(m-1)}_k \textbf{X}^{(m-1)}_k + \textbf{B}_0^{-1} \bigg )^{-1} \\
+\end{split}
+\end{equation*}
+
+3. For each $k=1,...,K$ draw $\sigma_k$: 
+
+\begin{equation*}
+\begin{split}
+\sigma^{2(m)}_k &\sim \mathrm{invGamma}(e_1/2, f_1/2) \\
+e_1 &= e_0 + \sum_{i=1}^{N} I(S^{(m-1)}_i = k)  \\
+f_1 &= f_0 + (\textbf{y}^{(m-1)}_k - \textbf{X}^{(m-1)}_k \boldsymbol{\beta}^{(m)}_k)'(\textbf{y}^{(m-1)}_k - \textbf{X}^{(m-1)}_k \boldsymbol{\beta}^{(m)}_k), 
+\end{split}
+\end{equation*}
+
+4. For each $i=1,...,N$, draw $S_i$: 
+
+\begin{equation*}
+\begin{split}
+	S_i^{(m)} &\sim \mathrm{\mathbf{Multinomial}}(p_0,...,p_k,...,p_k) \\
+	p_k &= \eta_k^{(m-1)} \mathrm{\Phi} ( y_{i} | \mathbf{x}_i \boldsymbol{\beta}_k^{(m)}, \sigma_k^{2(m)} )
+\end{split}
+\end{equation*}
+
+5. For each $k=1,...,K$ and using $\mathbf{S}^{(m)}$ construct $\mathbf{X}_k$ and $\mathbf{y}_k$ (the design matrix and dependent variable for all observation where $S_i^{(m)}=k$). 
+
+Repeat $M$ times until convergence. 
+\end{minipage} } \end{center}
+
+Extensions of this model, might model the weights as function of additional data $p(S_i=k|\mathbf{z}_i)$ \citep[p. 274]{FruehwirthSchnatter.2006}.
+
+
+
+
+
+
+
+Suppose, that some of the coefficients are assumed to be the same across mixture components, such as $\beta_{lk} = \beta_{l1} = ... = \beta_{lK}$ for at least some $l$. We define the model as in \citet[p. 257]{FruehwirthSchnatter.2006}: 
+
+\begin{equation*}
+\begin{split}
+y_i &= \mathbf{x}_i^f \bm{\delta} + \mathbf{x}_i^r \bm{\beta}_{k[S_i]} + e_{ik[S_i]} \\
+e_{ik} &\sim \mathrm{N}(0,\sigma^2_{k[S_i]}). 
+\end{split}
+\end{equation*}
+
+To derive the Gibbs sampler define a vector that collects all regression coefficients: 
+
+\begin{equation*}
+\begin{split}
+\bm{\alpha} = (\bm{\delta}, \bm{\beta}_1, ..., \bm{\beta}_K), 
+\end{split}
+\end{equation*}
+
+and dummy variable $D_{ik}$ that takes a 1 if $S_i=k$ and 0 otherwise. Finally, define 
+
+\begin{equation*}
+\begin{split}
+\mathbf{z}_i = (\mathbf{x}_i^f, \mathbf{x}_i^r D_{i1}, ...., \mathbf{x}_i^r D_{iK}). 
+\end{split}
+\end{equation*}
+
+Note, that $\mathbf{z}_i$ is a vector that includes the variables with a common effect, and $K$ times the variables with a differential effect over the $K$ groups. Since only one $D_{ik}$ can take the value 1, all other terms in this vector are going to be zero, expect for the first term and one of the $K$ terms. The collection of these vectors, is the matrix $\mathbf{Z}$. 
+
+The priors are similar as above, but: 
+
+\begin{equation*}
+\begin{split}
+\boldsymbol{\alpha} &\sim \mathrm{\mathbf{N}}(\textbf{a}_0, \textbf{A}_0) \\
+\sigma^2_k &\sim \mathrm{invGamma}(e_0/2, f_0/2) \\
+\bm{\eta} &\sim \mathrm{\mathbf{Dirichlet}}(n_0, ..., n_0)
+\end{split}
+\end{equation*}
+
+
+
+\begin{center} \shadowbox{ \begin{minipage}{12cm}
+At each iteration $m$ do:  \\
+1. Draw $\mathbf{\eta}$: 
+
+\begin{equation*}
+\begin{split}
+\bm{\eta}^{(m)} &\sim \mathrm{\mathbf{Dirichlet}}(n_1,..., n_k ,...,n_K) \\
+n_k &= \sum_{i=1}^{N} I(S^{(m-1)}_i = k) + n_0, 
+\end{split}
+\end{equation*}
+
+where $I(.)$ is an indicator function taking the value 1 if the condition inside it holds, and zero otherwise. 
+
+2. Draw $\mathbf{\alpha}$: 
+
+\begin{equation*}
+\begin{split}
+\boldsymbol{\alpha}^{(m)} &\sim \mathrm{\mathbf{N}}(\textbf{a}_{1}, \textbf{A}_{1}) \\
+\textbf{a}_{1} &= \textbf{A}_{1} \bigg ( \sum_{i=1}^{N} \bigg ( ( 1/\sigma^{2(m-1)}_{k[S_i]} )  \textbf{z}^{'(m-1)}_i y_i \bigg ) + \textbf{A}_0^{-1} \textbf{a}_0  \bigg ) \\
+\textbf{A}_{1} &= \bigg ( \sum_{i=1}^{N} \bigg ( ( 1/\sigma^{2(m-1)}_{k[S_i]} ) \textbf{z}^{'(m-1)}_i  \textbf{z}^{(m-1)}_i \bigg ) + \textbf{A}_0^{-1} \bigg )^{-1} 
+\end{split}
+\end{equation*}
+
+3. For each $k=1,...,K$ draw $\sigma_k$: 
+
+\begin{equation*}
+\begin{split}
+\sigma^{2(m)}_k &\sim \mathrm{invGamma}(e_1/2, f_1/2) \\
+e_1 &= e_0 + \sum_{i=1}^{N} I(S^{(m-1)}_i = k)  \\
+f_1 &= f_0 + \mathbf{w}'\mathbf{w} \\ 
+\mathbf{w} &= \textbf{y}^{(m-1)}_k - \mathbf{X}_k^{f(m-1)} \bm{\delta}^{(m)} - \mathbf{X}_k^{r(m-1)} \bm{\beta}^{(m)}_{k},  
+\end{split}
+\end{equation*}
+
+4. For each $i=1,...,N$, draw $S_i$: 
+
+\begin{equation*}
+\begin{split}
+	S_i^{(m)} &\sim \mathrm{\mathbf{Multinomial}}(p_0,...,p_k,...,p_k) \\
+	p_k &= \eta_k^{(m-1)} \mathrm{\Phi} ( y_{i} | \mathbf{x}_k^{f(m-1)} \bm{\delta}^{(m)} + \mathbf{x}_k^{r(m-1)} \bm{\beta}^{(m)}_{k}, \sigma_k^{2(m)} )
+\end{split}
+\end{equation*}
+
+5. For each $k=1,...,K$ and using $\mathbf{S}^{(m)}$ construct $\mathbf{X}_k^f$, $\mathbf{X}_k^r$, $\mathbf{Z}$ and $\mathbf{y}_k$ (the design matrix and dependent variable for all observation where $S_i^{(m)}=k$).  \\
+
+Repeat $M$ times until convergence. 
+\end{minipage} } \end{center}
+
+\citet{FruehwirthSchnatter.2006} notes, that for large $K$ and many regressors, the algorithm can be time consuming. See \citet[p. 259]{FruehwirthSchnatter.2006} for alternatives. 
+
+\bibliographystyle{chicago}
+\bibliography{_references.bib}
+
+\end{document}
