@@ -1,2 +1,3 @@
-# GibbsSampler
-Gibbs Samplers in R
+# Gibbs Sampler in R and Notes
+
+
