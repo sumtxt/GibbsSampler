@@ -34,7 +34,7 @@ In order to identify the model $\sigma$ is usually set to one. To complete the B
 
 \begin{equation}
 \begin{split}
-\boldsymbol{\beta} &\sim \mathrm{\mathbf{N}}(\textbf{b}_0, \textbf{B}_0) \\
+\boldsymbol{\beta} &\sim \mathrm{\mathbf{N}}(\textbf{b}_0, \textbf{B}_0). \\
 \end{split}
 \end{equation}
 
@@ -80,7 +80,7 @@ Given the DAG in figure \ref{fig:ProbitDAG}, we can derive the full conditional 
 \f(\boldsymbol{\beta} | \mathbf{b}_0, \mathbf{B}_0, \mathbf{y}^{*}, \mathbf{y}, \mathbf{X} ) &= 
 	\f(\boldsymbol{\beta} | \mathbf{b}_0, \mathbf{B}_0) \times \prod_{i=1}^{n} \f(y_i^{*}|\mathbf{x}_i, \boldsymbol{\beta})\\
 \f( y_i^{*} | \mathbf{b}_0, \mathbf{B}_0, \boldsymbol{\beta}, \mathbf{y}, \mathbf{X} ) &= 
-	\f(y^{*}_i | \mathbf{x}_i, \boldsymbol{\beta}) \times \f(y_i | y^{*}_i) 
+	\f(y^{*}_i | \mathbf{x}_i, \boldsymbol{\beta}) \times \f(y_i | y^{*}_i). 
 \end{split}
 \end{equation}
 	
@@ -106,7 +106,7 @@ where $\mathbf{X}$ is the matrix of all covariate vectors $\mathbf{x}_i$ and sim
 where $\phi(.)$ is a normal p.d.f. with a variance parameter $\sigma^2=1$ and $\mathrm{T}(.)$ is a truncation function. The Gibbs Sampler works from iterative sampling of the two densities. 
 
 The mixing of this sampler is not very good though. I better mixing can be obtained by marginal data augmentation.
-The alternative Gibbs sampler below corresponds to scheme 1 in \citet[p. 317-318]{Imai.vanDyk.2005}, that generalizes an earlier scheme in \citet{vanDyk.Meng.2001}. See also \citet[390]{Jackman.2009} for a summary. 
+The alternative Gibbs sampler below corresponds to scheme 1 in \citet[p. 317-318]{Imai.vanDyk.2005} that generalizes an earlier scheme in \citet{vanDyk.Meng.2001}. See also \citet[390]{Jackman.2009} for a summary. 
 
 We define the following prior distributions: 
 \begin{equation}
@@ -116,7 +116,7 @@ We define the following prior distributions:
 	\end{split}
 \end{equation}
 
-where $v_0$ (degrees of freedom), $\alpha_0^2$ (tuning parameter) and $\mathbf{B}_0$ (covariance) are hyper paramteres. $\chi_{df}^2$ is the $\chi_{df}^2$-distribution with $df$ deegres of freedom. Notice, that the prior mean for $\bm{\tilde{\beta}}$ has to be set to zero and the prior precision matrix is defined over the the unidentified version of $\bm{\beta}$ (I denote unidentified paramters with a tilde).  The following MCMC scheme can be employed, denoting values from iteration $t$ with superscripts '$(t)$'. \citet{vanDyk.Meng.2001} show, that $v_0=0$ (which induces an improper prior on $\alpha^2$) leads to the most efficient algorithm in a sense that the autocorrelation is reduced most. In practical applications, \citet{Imai.vanDyk.2005} use the sets ($v_0=3,\alpha_0^2=3$) and ($v_0=6,\alpha_0^2=v_0$). 
+where $v_0$ (degrees of freedom), $\alpha_0^2$ (tuning parameter) and $\mathbf{B}_0$ (covariance) are hyper paramteres. $\chi_{df}^2$ is the $\chi_{df}^2$-distribution with $df$ deegres of freedom. Notice, that the prior mean for $\bm{\tilde{\beta}}$ has to be set to zero and the prior precision matrix is defined over the the unidentified version of $\bm{\beta}$ (I denote unidentified paramters with a tilde).  The following MCMC scheme can be employed, denoting values from iteration $t$ with superscripts '$(t)$'. \citet{vanDyk.Meng.2001} show that $v_0=0$ (which induces an improper prior on $\alpha^2$) leads to the most efficient algorithm in a sense that the autocorrelation is reduced most. In practical applications, \citet{Imai.vanDyk.2005} use the sets ($v_0=3,\alpha_0^2=3$) and ($v_0=6,\alpha_0^2=v_0$). 
 
 \begin{center} \shadowbox{ \begin{minipage}{12cm}
 Define the following constant: 
