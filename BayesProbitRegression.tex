@@ -286,9 +286,11 @@ where $N_g$ are the number of observations for the $g^{th}$ group and $\mathbf{y
 
 \begin{equation}
 \begin{split}
-	\alpha_g = \phi \big (  (\overline{y}_g^{*} N_g)/(\omega^{-2} + N_g) , 1/(\omega^{-2} + N_g) \big ) \\
+	\alpha_g &= \phi \big (  (\overline{\epsilon}_g^{*} N_g)/(\omega^{-2} + N_g) , 1/(\omega^{-2} + N_g) \big ) \\
+	\overline{\epsilon}_g^{*} &= \frac{1}{N_g} \sum_{j=1}^{N_g} (y_{gj}^{*} - \mathbf{x}_{gj}\bm{\beta})
 \end{split}
 \end{equation}
+
 
 \begin{equation}
 \begin{split}
