@@ -71,7 +71,7 @@ Finite mixture of multivariate mixtures of normals are (generic) identifiable \c
 
 A Gibbs Sampler can be found for example in \citep[p. 75, 253]{FruehwirthSchnatter.2006}, which I adapted in notation. 
 
-\begin{center} \shadowbox{ \begin{minipage}{12cm}
+\begin{shadedbox}
 At each iteration $m$ do:  \\
 1. Draw $\mathbf{\eta}$: 
 
@@ -116,7 +116,7 @@ f_1 &= f_0 + (\textbf{y}^{(m-1)}_k - \textbf{X}^{(m-1)}_k \boldsymbol{\beta}^{(m
 5. For each $k=1,...,K$ and using $\mathbf{S}^{(m)}$ construct $\mathbf{X}_k$ and $\mathbf{y}_k$ (the design matrix and dependent variable for all observation where $S_i^{(m)}=k$). 
 
 Repeat $M$ times until convergence. 
-\end{minipage} } \end{center}
+\end{shadedbox}
 
 Extensions of this model, might model the weights as function of additional data $p(S_i=k|\mathbf{z}_i)$ \citep[p. 274]{FruehwirthSchnatter.2006}.
 
@@ -165,7 +165,7 @@ The priors are similar as above, but:
 
 
 
-\begin{center} \shadowbox{ \begin{minipage}{12cm}
+\begin{shadedbox}
 At each iteration $m$ do:  \\
 1. Draw $\mathbf{\eta}$: 
 
@@ -211,7 +211,7 @@ f_1 &= f_0 + \mathbf{w}'\mathbf{w} \\
 5. For each $k=1,...,K$ and using $\mathbf{S}^{(m)}$ construct $\mathbf{X}_k^f$, $\mathbf{X}_k^r$, $\mathbf{Z}$ and $\mathbf{y}_k$ (the design matrix and dependent variable for all observation where $S_i^{(m)}=k$).  \\
 
 Repeat $M$ times until convergence. 
-\end{minipage} } \end{center}
+\end{shadedbox}
 
 \citet{FruehwirthSchnatter.2006} notes, that for large $K$ and many regressors, the algorithm can be time consuming. See \citet[p. 259]{FruehwirthSchnatter.2006} for alternatives. 
 

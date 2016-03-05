@@ -22,10 +22,14 @@
 \usepackage{rotating}
 \usepackage{booktabs}
 \usepackage[labelfont={bf,small},textfont={small},justification=RaggedRight,margin=0pt]{caption}
-\usepackage{fancybox}
+
+
+\usepackage[framemethod=tikz]{mdframed}
+
+\newmdenv[shadow=true,shadowcolor=black,font=\sffamily,rightmargin=8pt]{shadedbox}
 
 \usepackage{tikz}
-\usetikzlibrary{arrows,automata}
+\usetikzlibrary{arrows,automata,shadows}
 
 \usepackage{fancyhdr}
 
