@@ -6,6 +6,8 @@
 % - first version June, 2011
 % - revisited after consolidating my notes on Gibbs Sampling, included statement on sampling 
 % - included marg. data aug. statement in June 2013
+% - included varying intercept extension in February 2016
+
 
 \newcommand{\f}{\mathit{f}}
 \newcommand{\LL}{\mathit{L}}
@@ -21,7 +23,7 @@ We only observe the latent variable in terms of a binary state: If $y_{i}^{*}$ i
 
 \begin{equation}
 \begin{split}
-y^{*}_i &\sim \mathrm{\mathbf{N}}(\textbf{x}_i \boldsymbol{\beta} ,\sigma) \\
+y^{*}_i &\sim \mathrm{\mathbf{N}}(\textbf{x}_i \boldsymbol{\beta} ,\sigma^2) \\
 y_{i} &= \left \{
 \begin{array}{ll}
 	0 & \quad \text{if $y_{i}^{*} < 0$ }\\
@@ -30,13 +32,15 @@ y_{i} &= \left \{
 \end{split}	
 \end{equation}
 
-In order to identify the model $\sigma$ is usually set to one. To complete the Bayesian model, it is necessary to specify a prior distribution for the coefficients. It is usually assumed that they are from a multivariate normal distribution: 
+In order to identify the model $\sigma^2$ is usually set to one. To complete the Bayesian model, it is necessary to specify a prior distribution for the coefficients. It is usually assumed that they are from a multivariate normal distribution: 
 
 \begin{equation}
 \begin{split}
 \boldsymbol{\beta} &\sim \mathrm{\mathbf{N}}(\textbf{b}_0, \textbf{B}_0). \\
 \end{split}
 \end{equation}
+
+\subsection*{Albert-Chib Gibbs Sampler}
 
 The posterior distribution can not be marginalized analytically. A Gibbs sampler was first suggested by \citet{Albert.Chib.1993} and can be motivated using data augmentation and the directed acyclic graph (DAG) of the model. 
 
@@ -88,7 +92,7 @@ The first density is a product of a normal prior density and the likelihood of $
 
 \begin{equation}
 	\f(\boldsymbol{\beta} | \mathbf{b}_0, \mathbf{B}_0, \mathbf{X}, \mathbf{y}^{*}) = 
-		\phi \bigg (  (\mathbf{B}_0^{-1} + \mathbf{X}'\mathbf{X})^{-1} (\mathbf{B}_0^{-1} \mathbf{b}_0 + \mathbf{X}'\mathbf{y}^{*}), (\mathbf{B}_0^{-1} + \mathbf{X}'\mathbf{X})^{-1} \bigg ),
+		\phi \big (  (\mathbf{B}_0^{-1} + \mathbf{X}'\mathbf{X})^{-1} (\mathbf{B}_0^{-1} \mathbf{b}_0 + \mathbf{X}'\mathbf{y}^{*}), (\mathbf{B}_0^{-1} + \mathbf{X}'\mathbf{X})^{-1} \big ),
 \end{equation} 
 
 where $\mathbf{X}$ is the matrix of all covariate vectors $\mathbf{x}_i$ and similar, $\mathbf{y}^{*}$ the vector of all $y_i^{*}$. $\phi(.,.)$ is a normal p.d.f. The proof is standard. The conditional density in the second equation is: 
@@ -105,10 +109,13 @@ where $\mathbf{X}$ is the matrix of all covariate vectors $\mathbf{x}_i$ and sim
 
 where $\phi(.)$ is a normal p.d.f. with a variance parameter $\sigma^2=1$ and $\mathrm{T}(.)$ is a truncation function. The Gibbs Sampler works from iterative sampling of the two densities. 
 
-The mixing of this sampler is not very good though. I better mixing can be obtained by marginal data augmentation.
+\subsection*{Imai-van-Dyk-Meng Gibbs Sampler}
+
+Unfortunatly, the mixing of this sampler is poor. I better mixing can be obtained by marginal data augmentation.
 The alternative Gibbs sampler below corresponds to scheme 1 in \citet[p. 317-318]{Imai.vanDyk.2005} that generalizes an earlier scheme in \citet{vanDyk.Meng.2001}. See also \citet[390]{Jackman.2009} for a summary. 
 
 We define the following prior distributions: 
+
 \begin{equation}
 	\begin{split}
 	\bm{\tilde{\beta}} \sim \mathrm{N}(0,\mathbf{B}_0) \\
@@ -116,9 +123,9 @@ We define the following prior distributions:
 	\end{split}
 \end{equation}
 
-where $v_0$ (degrees of freedom), $\alpha_0^2$ (tuning parameter) and $\mathbf{B}_0$ (covariance) are hyper paramteres. $\chi_{df}^2$ is the $\chi_{df}^2$-distribution with $df$ deegres of freedom. Notice, that the prior mean for $\bm{\tilde{\beta}}$ has to be set to zero and the prior precision matrix is defined over the the unidentified version of $\bm{\beta}$ (I denote unidentified paramters with a tilde).  The following MCMC scheme can be employed, denoting values from iteration $t$ with superscripts '$(t)$'. \citet{vanDyk.Meng.2001} show that $v_0=0$ (which induces an improper prior on $\alpha^2$) leads to the most efficient algorithm in a sense that the autocorrelation is reduced most. In practical applications, \citet{Imai.vanDyk.2005} use the sets ($v_0=3,\alpha_0^2=3$) and ($v_0=6,\alpha_0^2=v_0$). 
+where $v_0$ (degrees of freedom), $\alpha_0^2$ (tuning parameter) and $\mathbf{B}_0$ (covariance) are hyper paramteres. $\chi_{df}^2$ is the $\chi_{df}^2$-distribution with $df$ deegres of freedom. Notice, that the prior mean for $\bm{\tilde{\beta}}$ has to be set to zero and the prior precision matrix is defined over the the unidentified version of $\bm{\beta}$ (I denote unidentified paramters with a tilde).  The following MCMC scheme can be employed, denoting values from iteration $t$ with superscripts '$(t)$': 
 
-\begin{center} \shadowbox{ \begin{minipage}{12cm}
+\begin{shadedbox}
 Define the following constant: 
 
 \begin{equation*}
@@ -178,9 +185,119 @@ v_1 &= v_0 + n \\
 \end{equation*}
 
 Set $\bm{\beta}^{(t)} = \bm{\tilde{\beta}} / \alpha$ and discard $\alpha^2$. Repeat $T$ times until convergence. 
-\end{minipage} } \end{center}
+\end{shadedbox}
 
-\newpage
+\citet{vanDyk.Meng.2001} show that $v_0=0$ (which induces an improper prior on $\alpha^2$) leads to the most efficient algorithm in a sense that the autocorrelation is reduced most. In practical applications, \citet{Imai.vanDyk.2005} use the sets ($v_0=3,\alpha_0^2=3$) and ($v_0=6,\alpha_0^2=v_0$). 
+
+
+\subsection*{Extension with Varying Intercept}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Let there be $G$ groups for which the are unobserved effects, $\alpha_1,...,\alpha_g,...\alpha_G$. The extended models takes the following form: 
+
+\begin{equation}
+\begin{split}
+y^{*}_i &\sim \mathrm{\mathbf{N}}(\textbf{x}_i \boldsymbol{\beta} + \alpha_{g[i]},1) \\
+y_{i} &= \left \{
+\begin{array}{ll}
+	0 & \quad \text{if $y_{i}^{*} < 0$ }\\
+	1 & \quad \text{otherwise}\\
+\end{array} \right..
+\end{split}	
+\end{equation}
+
+In addition to the prior densities stipulated above, we assume additionally: 
+
+\begin{equation}
+\begin{split}
+ 	\alpha_g &\sim N(0,\omega^2) \\
+ 	\omega^2 &\sim \mathrm{invGamma}(e_0/2, h_0/2) \\
+\end{split}
+\end{equation}
+
+
+
+
+\begin{figure}[!ht]
+\centering
+
+\begin{tikzpicture}[scale=2]
+\tikzstyle{every node}=[draw,shape=circle];
+\draw[fill=white] (0.65, -0.35) rectangle (2.35, 1.35);
+\path (-1,0.5) node[rectangle]  (b0) {$\mathbf{b}_0$};
+\path (-1,-0.5) node[rectangle]  (B0) {$\mathbf{B}_0$};
+\path (0,0) node (beta) {$\boldsymbol{\beta}$};
+\path (1,0) node (ystar) {$y_i^{*}$};
+\path (2,0) node[rectangle]  (x) {$\mathbf{x}_i$};
+\path (1,1) node[rectangle]  (y) {$y_i$};
+\path (0.7,-1) node (alpha1) {$\alpha_1$};
+\path (1.1,-1) node[draw=none] {$...$};
+\path (1.5,-1) node (alphaG) {$\alpha_G$};
+\path (1,-2) node (omega) {$\omega^2$};
+\path (0,-2) node[rectangle] (e0) {$e_0$};
+\path (2,-2) node[rectangle] (f0) {$f_0$};
+\draw[thick,->] (omega) -- (alphaG);
+\draw[thick,->] (omega) -- (alpha1);
+\draw[thick,->] (e0) -- (omega);
+\draw[thick,->] (f0) -- (omega);
+\draw[thick,->] (alpha1) -- (ystar);
+\draw[thick,->] (alphaG) -- (ystar);
+\draw[thick,->] (beta) -- (ystar);
+\draw[thick,->] (ystar) -- (y);
+\draw[thick,<-] (ystar) -- (x);
+\draw[thick,->] (b0) -- (beta);
+\draw[thick,->] (B0) -- (beta);
+\end{tikzpicture}
+
+\caption{A directed acyclic graph representation of a probit model.} \label{fig:ProbitDAG2}
+\end{figure}
+
+An extended version of the graph from figure \ref{fig:ProbitDAG} appears in figure \ref{fig:ProbitDAG2} suggesting the full conditional densities in \ref{eq:fullcond2}.
+
+\begin{equation}
+\begin{split}
+\f(\boldsymbol{\beta} | \mathbf{b}_0, \mathbf{B}_0, \mathbf{y}^{*}, \mathbf{y}, \mathbf{X} ) &= 
+	\f(\boldsymbol{\beta} | \mathbf{b}_0, \mathbf{B}_0) \times \prod_{i=1}^{n} \f(y_i^{*}|\mathbf{x}_i, \boldsymbol{\beta},\bm{\alpha})\\
+\f( y_i^{*} | \mathbf{b}_0, \mathbf{B}_0, \boldsymbol{\beta}, \mathbf{y}, \mathbf{X} ) &= 
+	\f(y^{*}_i | \mathbf{x}_i, \boldsymbol{\beta}, \bm{\alpha}) \times \f(y_i | y^{*}_i) \\
+\f( \alpha_g | \omega^2, \mathbf{y}_g^*, \mathbf{X}_{g}, \bm{\beta} ) &= \f( \alpha_g | \omega^2 ) \times 
+	\prod_{j=1}^{N_g}  \f( y^*_{gj} | \mathbf{x}_{gj}, \bm{\beta} ) \\
+\f( \omega^2 | e_0, h_0, \bm{\alpha} ) &= f(\omega^2 | e_0, h_0) \times \prod_{g=1}^{G} \f(\alpha_g) \label{eq:fullcond2}
+\end{split}
+\end{equation}
+
+where $N_g$ are the number of observations for the $g^{th}$ group and $\mathbf{y}_g^*, \mathbf{X}_{g}$ are the observations that belong to the $g^{th}$ group. All full conditional densities are available in closed-form: 
+
+\begin{equation}
+	\f(\boldsymbol{\beta} | \mathbf{b}_0, \mathbf{B}_0, \mathbf{X}, \mathbf{y}^{*}) = 
+		\phi \big (  (\mathbf{B}_0^{-1} + \mathbf{X}'\mathbf{X})^{-1} (\mathbf{B}_0^{-1} \mathbf{b}_0 + \mathbf{X}'(\mathbf{y}^{*}-\bm{\alpha})), (\mathbf{B}_0^{-1} + \mathbf{X}'\mathbf{X})^{-1} \big ),
+\end{equation} 
+
+\begin{equation}
+\begin{split}
+	  \f(y_{i}^{*} | \mathbf{x}_i, \boldsymbol{\beta}, y_i)  = \left \{
+	  \begin{array}{ll}
+	    	\phi(\mathbf{x}_i \boldsymbol{\beta}+\bm{\alpha})\mathrm{T}(y_i^* \leq 0) \quad \text{if \ } y_i = 0 \\
+	    	\phi(\mathbf{x}_i \boldsymbol{\beta}+\bm{\alpha})\mathrm{T}(y_i^* > 0) \quad \text{if \ } y_i = 1
+	  \end{array} \right.,
+\end{split}	
+\end{equation}
+
+
+\begin{equation}
+\begin{split}
+	\alpha_g = \phi \big (  (\overline{y}_g^{*} N_g)/(\omega^{-2} + N_g) , 1/(\omega^{-2} + N_g) \big ) \\
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+	\omega^2 &\sim \mathrm{invGamma}(e_1/2,h_1/2) \\
+	e_1 &= e_0 + G \\
+	h_1 &= h_0 + \sum_{g=1}^G \alpha_g^2 \\
+\end{split}
+\end{equation}
+
 
 \bibliographystyle{chicago}
 \bibliography{_references.bib}
